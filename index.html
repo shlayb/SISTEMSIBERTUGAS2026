@@ -17,6 +17,7 @@
   <script defer src="assets/js/mock-data.js"></script>
   <script defer src="assets/js/mqtt-client.js"></script>
   <script defer src="assets/js/app.js"></script>
+  <script defer src="assets/js/logging-control.js"></script>
 </head>
 <body>
   <svg class="svg-defs" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -30,19 +31,29 @@
   </svg>
   <a class="skip-link" href="#main">Lewati ke konten</a>
   <header class="site-header">
-    <div class="shell header-inner flex items-center justify-between gap-3">
+    <div class="shell header-inner monitor-header flex items-center justify-between gap-3">
       <a href="index.html" class="brand" aria-label="ThermoGuard-CPS, monitoring">
         <span class="brand-mark"><svg class="icon"><use href="#i-temp"/></svg></span>
         <span>ThermoGuard<span class="brand-suffix">-CPS</span></span>
       </a>
-      <div class="flex items-center gap-2 sm:gap-4">
+      <div class="monitor-header-actions flex items-center gap-2 sm:gap-4">
+        <button id="toggleLogging" type="button" class="button logging-toggle" aria-describedby="loggingControlStatus" disabled><span class="logging-control-dot" aria-hidden="true"></span><span id="loggingControlLabel">Memuat…</span></button>
         <span id="connectionBadge" class="badge connection" role="status"><i class="dot"></i><span id="connectionText">MQTT Offline</span></span>
         <a class="icon-button active:scale-[0.98]" href="settings.html" aria-label="Buka pengaturan" title="Pengaturan">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 3-.5 3-2 .9L4 6l-2 3 2.3 2v2L2 15l2 3 2.5-.9 2 .9.5 3h6l.5-3 2-.9L20 18l2-3-2.3-2v-2L22 9l-2-3-2.5.9-2-.9-.5-3Z"/><circle cx="12" cy="12" r="3"/></svg>
         </a>
       </div>
     </div>
+    <div class="shell logging-control-feedback"><p id="loggingControlStatus" role="status" aria-live="polite" aria-atomic="true">Memeriksa status logging bersama…</p></div>
   </header>
+  <dialog id="loggingControlDialog" class="logging-control-dialog" aria-labelledby="loggingDialogTitle" aria-describedby="loggingDialogHelp">
+    <form id="loggingControlForm">
+      <h2 id="loggingDialogTitle">Kendali logging</h2>
+      <p id="loggingDialogHelp" class="field-help">Perubahan berlaku untuk semua perangkat. Masukkan kunci operator; kunci tidak disimpan di browser.</p>
+      <div class="field"><label for="loggingControlKey">Kunci operator</label><input id="loggingControlKey" type="password" required minlength="32" maxlength="256" autocomplete="off" spellcheck="false" autocapitalize="none"></div>
+      <div class="logging-dialog-actions"><button id="cancelLoggingControl" type="button" class="button">Batal</button><button id="confirmLoggingControl" type="submit" class="button button-primary">Start Logging</button></div>
+    </form>
+  </dialog>
   <main id="main" class="shell max-w-7xl mx-auto space-y-6">
     <div class="page-heading flex flex-wrap items-end justify-between gap-3">
       <div><p class="eyebrow">RUANG SERVER / ESP32</p><h1>Monitoring proteksi</h1></div>
@@ -110,7 +121,7 @@
         <button class="button active:scale-[0.98]" data-scenario="CRITICAL" aria-pressed="false">Critical</button>
       </div>
     </section>
-    <section class="card log-card" aria-labelledby="logTitle"><div class="flex items-center justify-between gap-3"><h2 id="logTitle">Log event terbaru</h2><span class="muted text-sm">20 event terakhir</span></div><ol id="eventLog" class="event-list" aria-label="Log event"></ol></section>
+    <section class="card log-card" aria-labelledby="logTitle"><div class="flex flex-wrap items-center justify-between gap-3"><div><h2 id="logTitle">Log event terbaru</h2><p class="muted text-sm">20 event lokal di tab ini</p></div><a href="history.html" class="button">Riwayat terpusat</a></div><ol id="eventLog" class="event-list" aria-label="Log event"></ol></section>
     <footer class="footer"><span>ThermoGuard-CPS</span><span id="footerSource">Monitoring lokal & telemetri MQTT</span></footer>
   </main>
   <noscript><p class="noscript">Aktifkan JavaScript untuk menjalankan dashboard.</p></noscript>

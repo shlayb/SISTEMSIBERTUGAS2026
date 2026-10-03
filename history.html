@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FFFFFF">
+  <title>Riwayat · ThermoGuard-CPS</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2322C55E'/%3E%3Cpath d='M16 6v13m-4-9v10a6 6 0 1 0 8 0V10a4 4 0 0 0-8 0' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.1.13"></script>
+  <link rel="stylesheet" href="assets/css/custom.css">
+  <link rel="stylesheet" href="assets/css/history.css">
+  <script defer src="assets/js/history.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Lewati ke konten</a>
+  <header class="site-header"><div class="shell header-inner history-toolbar"><a href="index.html" class="brand"><span class="brand-mark"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14.5V5a3 3 0 0 1 6 0v9.5a5 5 0 1 1-6 0Z"/><path d="M12 8v10"/></svg></span><span>ThermoGuard<span class="brand-suffix">-CPS</span></span></a><a href="index.html" class="button">Monitoring</a></div></header>
+  <main id="main" class="shell max-w-7xl mx-auto space-y-6 history-main">
+    <div class="page-heading"><p class="eyebrow">RIWAYAT BERSAMA</p><h1>Log perangkat</h1><p class="muted">Riwayat yang sama di semua perangkat. Pencatatan berjalan melalui sumber telemetri meskipun dashboard ditutup.</p></div>
+    <section class="card" aria-labelledby="filterTitle">
+      <div class="history-toolbar"><h2 id="filterTitle">Filter riwayat</h2><span class="badge">Akses baca publik</span></div>
+      <form id="historyFilters" class="history-filters">
+        <div class="field"><label for="logSource">Sumber data</label><select id="logSource" name="source"><option value="device">Perangkat nyata</option><option value="simulation">Simulasi terpusat</option></select></div>
+        <div class="field"><label for="logDevice">ID perangkat</label><input id="logDevice" name="deviceId" type="text" maxlength="96" placeholder="Semua perangkat" spellcheck="false" autocapitalize="none"><p class="field-help">Isi ID persis, misalnya server-01.</p></div>
+        <div class="field"><label for="logStatus">Status</label><select id="logStatus" name="status"><option value="">Semua status</option><option>NORMAL</option><option>WARNING</option><option>CRITICAL</option></select></div>
+        <div class="field"><label for="logFrom">Dari waktu kejadian (UTC)</label><input id="logFrom" name="from" type="datetime-local" step="1"></div>
+        <div class="field"><label for="logTo">Sampai waktu kejadian (UTC)</label><input id="logTo" name="to" type="datetime-local" step="1"></div>
+        <div class="field"><label for="logLimit">Baris per halaman</label><select id="logLimit" name="limit"><option>25</option><option>50</option><option>100</option></select></div>
+        <div class="history-filter-actions"><p class="field-help">Waktu kosong menampilkan seluruh masa retensi. Simulasi tombol dashboard tetap lokal dan tidak masuk ke riwayat ini.</p><button type="submit" class="button button-primary">Terapkan filter</button></div>
+      </form>
+    </section>
+    <section id="historyResults" class="card" aria-labelledby="resultsTitle" aria-busy="false">
+      <div class="history-toolbar"><div><h2 id="resultsTitle">Riwayat kejadian</h2><p id="historySummary" class="field-help">Menyiapkan riwayat…</p></div><div class="history-actions"><button id="refreshLogs" type="button" class="button">Muat terbaru</button><button id="exportLogs" type="button" class="button">Ekspor CSV</button><button id="cancelExport" type="button" class="button" hidden>Batalkan ekspor</button></div></div>
+      <label class="check-field history-auto"><input id="autoRefresh" type="checkbox" checked><span>Perbarui otomatis setiap 30 detik</span></label>
+      <p id="historyMessage" class="history-message" role="status" aria-live="polite" aria-atomic="true">Memuat riwayat…</p>
+      <p id="exportMessage" class="field-help" role="status" aria-live="polite" aria-atomic="true"></p>
+      <div class="history-table-wrap">
+        <table class="history-table"><caption class="history-caption">Waktu UTC; terbaru berdasarkan waktu kejadian. Ekspor memakai seluruh hasil filter yang diterapkan, maksimal 10.000 baris.</caption><thead><tr><th scope="col">Waktu UTC</th><th scope="col">Perangkat / Event</th><th scope="col">Status</th><th scope="col">Sensor</th><th scope="col">Setpoint</th><th scope="col">Aktuator</th><th scope="col">Jenis event</th></tr></thead><tbody id="historyRows"></tbody></table>
+      </div>
+      <div class="history-toolbar history-pagination"><button id="previousLogs" type="button" class="button" disabled>Sebelumnya</button><span id="historyPage" class="muted text-sm">Halaman 1</span><button id="nextLogs" type="button" class="button" disabled>Berikutnya</button></div>
+    </section>
+    <footer class="footer"><span>ThermoGuard-CPS · Riwayat bersama</span><a href="settings.html">Pengaturan</a></footer>
+  </main>
+  <noscript><p class="noscript">Aktifkan JavaScript untuk memuat dan mengekspor riwayat.</p></noscript>
+</body>
+</html>

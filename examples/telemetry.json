@@ -1,0 +1,14 @@
+{
+  "eventId": "boot-7a21-1042",
+  "deviceId": "server-01",
+  "occurredAt": "2026-10-03T08:15:00.000Z",
+  "temperature": 32.4,
+  "humidity": 48.1,
+  "smoke": 620,
+  "setpoint": 30,
+  "status": "CRITICAL",
+  "actuators": { "servo": 90, "buzzer": true, "led": "red" },
+  "eventType": "TELEMETRY",
+  "source": "device",
+  "replay": false
+}

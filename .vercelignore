@@ -1,0 +1,7 @@
+.git/
+node_modules/
+.vercel/
+.env*
+tests/
+coverage/
+README.md

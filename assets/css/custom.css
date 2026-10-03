@@ -996,6 +996,52 @@ canvas {
   }
 }
 
+.logging-toggle {
+  min-height:2.75rem;
+  gap:.45rem;
+  white-space:nowrap;
+  font-size:.75rem;
+  color:#166534;
+  background:#f0fdf4;
+  border-color:#bbf7d0;
+}
+.logging-toggle[data-enabled=true] {
+  color:#9a3412;
+  background:#fff7ed;
+  border-color:#fed7aa;
+}
+.logging-control-dot {
+  width:.45rem;
+  height:.45rem;
+  border-radius:50%;
+  background:currentColor;
+  flex-shrink:0;
+}
+.logging-control-feedback {
+  padding-bottom:.6rem;
+  text-align:right;
+  font-size:.75rem;
+  color:var(--muted);
+  overflow-wrap:anywhere;
+}
+.logging-control-feedback [data-state=error] { color:#9a3412; }
+.logging-control-dialog {
+  width:min(26rem,calc(100% - 2rem));
+  max-height:calc(100% - 2rem);
+  margin:auto;
+  padding:1.5rem;
+  border:1px solid var(--line);
+  border-radius:1rem;
+  background:#fff;
+  color:var(--ink);
+}
+.logging-control-dialog::backdrop { background:rgba(17,24,39,.35); }
+.logging-dialog-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:.65rem; margin-top:1.5rem; }
+@media(max-width:39.99rem) {
+  .monitor-header { flex-wrap:wrap; padding-block:.7rem; }
+  .monitor-header-actions { width:100%; justify-content:flex-end; }
+}
+
 @media(hover:hover) {
   .card:hover {
     transform:translateY(-2px);
