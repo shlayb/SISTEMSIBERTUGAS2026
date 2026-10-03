@@ -8,7 +8,7 @@
     topic: 'thermoguard/server-01', mqttUsername: '', mqttPassword: '',
     setpointMode: 'potentiometer', manualSetpoint: 30, smokeThreshold: 400,
     refreshInterval: 2000, telegramEnabled: false, telegramToken: '', telegramChatId: '',
-    configId: 'default'
+    configId: 'default', updatedAt: 0
   });
   let storageError = '';
   function validate(raw) {
@@ -30,13 +30,55 @@
     if (s.telegramEnabled && (!/^\d+:[\w-]{20,}$/.test(s.telegramToken) || !/^(-?\d+|@[\w]+)$/.test(s.telegramChatId))) throw new Error('Lengkapi Bot Token dan Chat ID Telegram yang valid.');
     if (s.brokerHost && location.protocol === 'https:' && s.brokerProtocol !== 'wss') throw new Error('Halaman HTTPS memerlukan broker WSS.');
     s.configId = String(s.configId).slice(0, 100);
+    s.updatedAt = Number(s.updatedAt) || 0;
     return s;
   }
+
+  let cloudSyncing = false;
+  async function syncFromCloud(currentLocal) {
+    if (cloudSyncing) return;
+    cloudSyncing = true;
+    try {
+      const res = await fetch('/api/settings');
+      if (res.ok) {
+        const cloudData = await res.json();
+        const cloudS = validate(cloudData);
+        if (cloudS.updatedAt > currentLocal.updatedAt) {
+          localStorage.setItem(KEY, JSON.stringify(cloudS));
+          window.dispatchEvent(new StorageEvent('storage', { key: KEY }));
+          const formNode = document.getElementById('settingsForm');
+          if (formNode && typeof populate === 'function') populate(cloudS);
+        } else if (currentLocal.updatedAt > cloudS.updatedAt) {
+          syncToCloud(currentLocal);
+        }
+      } else if (res.status === 404 && currentLocal.updatedAt > 0) {
+        syncToCloud(currentLocal);
+      }
+    } catch (e) {
+      console.warn('Cloud sync failed:', e);
+    } finally {
+      cloudSyncing = false;
+    }
+  }
+
+  async function syncToCloud(s) {
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(s)
+      });
+    } catch (e) {
+      console.warn('Cloud save failed:', e);
+    }
+  }
+
   function load() {
     try {
       const raw = localStorage.getItem(KEY);
       const s = raw ? validate(JSON.parse(raw)) : { ...defaults };
       storageError = '';
+      syncFromCloud(s);
       return s;
     } catch (_) {
       storageError = 'Pengaturan tidak dapat dibaca. Nilai awal digunakan; periksa izin penyimpanan browser.';
@@ -46,9 +88,11 @@
   function save(raw) {
     const s = validate(raw);
     s.configId = `cfg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    s.updatedAt = Date.now();
     try { localStorage.setItem(KEY, JSON.stringify(s)); }
     catch (_) { throw new Error('Gagal menyimpan. Izinkan penyimpanan browser, lalu coba lagi.'); }
     storageError = '';
+    syncToCloud(s);
     return s;
   }
   TG.Settings = { KEY, defaults, load, save, validate, get storageError() { return storageError; } };

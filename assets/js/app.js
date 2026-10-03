@@ -9,6 +9,7 @@
   const mqtt = new TG.MQTTClient(settings);
   const events = [], demoHistory = [], deviceHistory = [];
   let lastDevice = null, lastDemo = null, demoTimer = null, lastLiveMode = null;
+  let simulationEnabled = true;
   let source = 'demo', lastDisplayMode = '', lastConnection = false;
   let deviceBuffer = null, bufferSeenAt = 0, invalidConfigLogged = false;
 
@@ -206,12 +207,13 @@
     }
     const telegramText = demo ? mode === 'CRITICAL' ? 'Darurat disimulasikan' : 'Simulasi siap' : data.telegramSent === true ? 'Terkirim oleh ESP32' : telegram.status;
     if ($('telegramStatus').textContent !== telegramText) $('telegramStatus').textContent = telegramText;
-    $('simulationNote').textContent = demo ? 'Data contoh aktif. Kondisi perangkat belum diketahui.' : 'Telemetri perangkat aktif. Uji skenario dinonaktifkan.';
-    document.querySelectorAll('[data-scenario]').forEach(button => { button.disabled = !demo; button.setAttribute('aria-pressed', String(demo && button.dataset.scenario === mock.mode)); });
+    $('simulationNote').textContent = demo ? 'Data contoh aktif. Kondisi perangkat belum diketahui.' : (simulationEnabled ? 'Telemetri perangkat aktif. Uji skenario dinonaktifkan.' : 'Simulasi dinonaktifkan. Menunggu telemetri ESP32.');
+    document.querySelectorAll('[data-scenario]').forEach(button => { button.disabled = !demo || !simulationEnabled; button.setAttribute('aria-pressed', String(demo && button.dataset.scenario === mock.mode)); });
     $('footerSource').textContent = demo ? 'Simulasi · tidak mengendalikan perangkat' : 'ESP32 · kendali proteksi lokal';
     updateBuffer();
   }
   function takeDemo() {
+    if (!simulationEnabled) return;
     lastDemo = mock.sample(); record(demoHistory, lastDemo);
     if (!mqtt.online) mock.collect(lastDemo);
   }
@@ -223,7 +225,7 @@
   function scheduleDemo() {
     clearTimeout(demoTimer);
     demoTimer = setTimeout(() => {
-      if (!freshDevice()) { takeDemo(); render(lastDemo); }
+      if (!freshDevice() && simulationEnabled) { takeDemo(); render(lastDemo); }
       scheduleDemo();
     }, settings.refreshInterval);
   }
@@ -240,7 +242,7 @@
       }
       lastConnection = detail.online;
     }
-    render(freshDevice() ? lastDevice : lastDemo);
+    render(freshDevice() ? lastDevice : (simulationEnabled ? lastDemo : (lastDevice || getEmptyDevice())));
   });
   mqtt.addEventListener('notice', ({ detail }) => log(detail));
   mqtt.addEventListener('sample', ({ detail: data }) => {
@@ -258,8 +260,35 @@
         lastLiveMode = mode;
       }
     }
-    render(freshDevice() ? lastDevice : lastDemo);
+    render(freshDevice() ? lastDevice : (simulationEnabled ? lastDemo : (lastDevice || getEmptyDevice())));
   });
+
+  function getEmptyDevice() {
+    return {
+      id: 'empty', source: 'device', ts: Date.now(),
+      temperature: 0, humidity: 0, smoke: 0, setpoint: settings.manualSetpoint,
+      smokeThreshold: settings.smokeThreshold, setpointMode: settings.setpointMode,
+      configId: settings.configId, actuators: null
+    };
+  }
+
+  const toggleBtn = $('toggleSimulation');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+      simulationEnabled = !simulationEnabled;
+      toggleBtn.textContent = simulationEnabled ? 'Nonaktifkan Simulasi' : 'Aktifkan Simulasi';
+      toggleBtn.setAttribute('aria-pressed', String(simulationEnabled));
+      document.querySelectorAll('[data-scenario]').forEach(b => b.disabled = !simulationEnabled || freshDevice());
+      if (simulationEnabled) {
+        log('Simulasi diaktifkan kembali.');
+        if (!freshDevice()) { seedDemo(); render(lastDemo); }
+      } else {
+        log('Simulasi dinonaktifkan.');
+        render(lastDevice || getEmptyDevice());
+      }
+    });
+  }
+
   document.querySelectorAll('[data-scenario]').forEach(button => button.addEventListener('click', () => {
     if (freshDevice()) return;
     mock.setScenario(button.dataset.scenario); takeDemo(); render(lastDemo);
@@ -276,7 +305,7 @@
   render(lastDemo); mqtt.connect(); scheduleDemo();
   const timer = setInterval(() => {
     const live = freshDevice();
-    telegram.tick(); render(live ? lastDevice : lastDemo);
+    telegram.tick(); render(live ? lastDevice : (simulationEnabled ? lastDemo : (lastDevice || getEmptyDevice())));
   }, 1000);
   window.addEventListener('pagehide', () => { mqtt.stop(); telegram.stop(); clearInterval(timer); clearTimeout(demoTimer); });
   // Back-forward cache restores the document with stopped timers/connections.

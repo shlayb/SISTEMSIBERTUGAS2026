@@ -100,7 +100,10 @@
       </section>
     </div>
     <section class="simulation-panel" aria-labelledby="simulationTitle">
-      <div><h2 id="simulationTitle">Uji skenario</h2><p id="simulationNote" class="muted text-sm">Data contoh aktif. Kondisi perangkat belum diketahui.</p></div>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div><h2 id="simulationTitle">Uji skenario</h2><p id="simulationNote" class="muted text-sm">Data contoh aktif. Kondisi perangkat belum diketahui.</p></div>
+        <button id="toggleSimulation" class="button active:scale-[0.98]" aria-pressed="true">Nonaktifkan Simulasi</button>
+      </div>
       <div class="scenario-buttons" role="group" aria-label="Skenario simulasi">
         <button class="button active:scale-[0.98]" data-scenario="NORMAL" aria-pressed="true">Normal</button>
         <button class="button active:scale-[0.98]" data-scenario="WARNING" aria-pressed="false">Warning</button>
