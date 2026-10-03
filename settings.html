@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FFFFFF">
+  <title>Pengaturan · ThermoGuard-CPS</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2322C55E'/%3E%3Cpath d='M16 6v13m-4-9v10a6 6 0 1 0 8 0V10a4 4 0 0 0-8 0' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.1.13"></script>
+  <link rel="stylesheet" href="assets/css/custom.css">
+  <script defer src="assets/js/settings.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Lewati ke konten</a>
+  <header class="site-header"><div class="shell header-inner flex items-center justify-between gap-3"><a href="index.html" class="brand"><span class="brand-mark"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14.5V5a3 3 0 0 1 6 0v9.5a5 5 0 1 1-6 0Z"/><path d="M12 8v10"/></svg></span><span>ThermoGuard<span class="brand-suffix">-CPS</span></span></a><a href="index.html" class="button active:scale-[0.98]">Monitoring</a></div></header>
+  <main id="main" class="shell max-w-7xl mx-auto settings-main">
+    <div class="page-heading"><p class="eyebrow">KONFIGURASI SISTEM</p><h1>Pengaturan</h1><p class="muted">Tersimpan di browser ini dan diterapkan saat monitoring dibuka.</p></div>
+    <form id="settingsForm" class="settings-form" autocomplete="off">
+      <div class="grid gap-5 lg:grid-cols-2">
+        <section class="card form-card"><div class="form-heading"><span class="section-number">01</span><div><h2>Koneksi MQTT</h2><p class="muted text-sm">Gunakan endpoint WebSocket broker.</p></div></div>
+          <div class="field"><label for="brokerHost">Host broker</label><input id="brokerHost" name="brokerHost" type="text" placeholder="mqtt.contoh.id" spellcheck="false" autocapitalize="none"><p class="field-help">Kosongkan untuk simulasi. Tanpa protokol, port, atau path.</p></div>
+          <div class="form-pair"><div class="field"><label for="brokerProtocol">Protokol</label><select id="brokerProtocol" name="brokerProtocol"><option value="wss">WSS (aman)</option><option value="ws">WS (lokal)</option></select></div><div class="field"><label for="brokerPort">Port WebSocket</label><input id="brokerPort" name="brokerPort" type="number" min="1" max="65535" step="1" required inputmode="numeric"></div></div>
+          <div class="field"><label for="brokerPath">Path WebSocket</label><input id="brokerPath" name="brokerPath" type="text" placeholder="/mqtt" required spellcheck="false"></div>
+          <div class="field"><label for="topic">Topik dasar</label><input id="topic" name="topic" type="text" required spellcheck="false" autocapitalize="none"><p class="field-help">Turunan: /telemetry, /config, dan /sync.</p></div>
+          <div class="form-pair"><div class="field"><label for="mqttUsername">Nama pengguna <span class="muted">(opsional)</span></label><input id="mqttUsername" name="mqttUsername" type="text" autocapitalize="none"></div><div class="field"><label for="mqttPassword">Kata sandi <span class="muted">(opsional)</span></label><input id="mqttPassword" name="mqttPassword" type="password" autocomplete="new-password"></div></div>
+        </section>
+        <div class="space-y-5">
+          <section class="card form-card"><div class="form-heading"><span class="section-number">02</span><div><h2>Proteksi & pembaruan</h2><p class="muted text-sm">ESP32 menjalankan kendali secara lokal.</p></div></div>
+            <div class="field"><label for="setpointMode">Sumber setpoint</label><select id="setpointMode" name="setpointMode"><option value="potentiometer">Potensiometer ESP32</option><option value="manual">Manual dari dashboard</option></select></div>
+            <div class="field"><label for="manualSetpoint">Setpoint manual (°C)</label><input id="manualSetpoint" name="manualSetpoint" type="number" min="15" max="60" step="0.1" required inputmode="decimal"><p class="field-help">Aktif setelah konfigurasi dikonfirmasi telemetri ESP32.</p></div>
+            <div class="form-pair"><div class="field"><label for="smokeThreshold">Ambang asap (ppm)</label><input id="smokeThreshold" name="smokeThreshold" type="number" min="1" max="10000" step="1" required inputmode="numeric"></div><div class="field"><label for="refreshInterval">Interval refresh (ms)</label><input id="refreshInterval" name="refreshInterval" type="number" min="500" max="10000" step="100" required inputmode="numeric"></div></div>
+          </section>
+          <section class="card form-card"><div class="form-heading"><span class="section-number">03</span><div><h2>Notifikasi Telegram</h2><p class="muted text-sm">Pesan darurat saat memasuki CRITICAL.</p></div></div>
+            <label class="check-field"><input id="telegramEnabled" name="telegramEnabled" type="checkbox"><span>Aktifkan notifikasi dari dashboard</span></label>
+            <div class="field"><label for="telegramToken">Bot Token</label><input id="telegramToken" name="telegramToken" type="password" autocomplete="new-password" placeholder="123456789:…"><p class="field-help">Token tersimpan di localStorage, terlihat oleh skrip di halaman ini.</p></div>
+            <div class="field"><label for="telegramChatId">Chat ID</label><input id="telegramChatId" name="telegramChatId" type="text" placeholder="-1001234567890" spellcheck="false"></div>
+            <p class="form-note">Buka chat bot dan kirim /start terlebih dahulu. Simulasi tidak mengirim pesan. Notifikasi browser memerlukan halaman terbuka dan internet; untuk operasi mandiri, kirim dari ESP32 atau backend.</p>
+          </section>
+        </div>
+      </div>
+      <div class="save-bar"><p id="settingsMessage" class="text-sm muted" role="status">Pengaturan disimpan hanya di perangkat ini.</p><div class="save-actions"><button id="resetSettings" type="button" class="button active:scale-[0.98]">Reset</button><button type="submit" class="button button-primary active:scale-[0.98]">Simpan pengaturan</button></div></div>
+    </form>
+    <footer class="footer"><span>ThermoGuard-CPS</span><span>Konfigurasi perangkat melalui MQTT</span></footer>
+  </main>
+  <noscript><p class="noscript">Aktifkan JavaScript untuk menyimpan pengaturan.</p></noscript>
+</body>
+</html>

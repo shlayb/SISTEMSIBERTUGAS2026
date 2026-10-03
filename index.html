@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FFFFFF">
+  <meta name="description" content="Monitoring suhu, kelembapan, asap, dan proteksi lokal ruang server ThermoGuard-CPS.">
+  <title>Monitoring · ThermoGuard-CPS</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2322C55E'/%3E%3Cpath d='M16 6v13m-4-9v10a6 6 0 1 0 8 0V10a4 4 0 0 0-8 0' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.1.13"></script>
+  <link rel="stylesheet" href="assets/css/custom.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/mqtt@5.14.1/dist/mqtt.min.js"></script>
+  <script defer src="assets/js/settings.js"></script>
+  <script defer src="assets/js/mock-data.js"></script>
+  <script defer src="assets/js/mqtt-client.js"></script>
+  <script defer src="assets/js/app.js"></script>
+</head>
+<body>
+  <svg class="svg-defs" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z"/><path d="m8 12 3 3 5-6"/></symbol>
+    <symbol id="i-temp" viewBox="0 0 24 24"><path d="M9 14.5V5a3 3 0 0 1 6 0v9.5a5 5 0 1 1-6 0Z"/><path d="M12 8v9m-1 1h2m4-12h3m-3 4h2"/></symbol>
+    <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3s-7 8-7 12a7 7 0 0 0 14 0c0-4-7-12-7-12Z"/><path d="M8 15a4 4 0 0 0 4 4"/></symbol>
+    <symbol id="i-smoke" viewBox="0 0 24 24"><path d="M4 18h13a4 4 0 0 0 0-8 6 6 0 0 0-11-2 5 5 0 0 0-2 10Zm5-13V2m6 3V2M3 22h15"/></symbol>
+    <symbol id="i-tune" viewBox="0 0 24 24"><path d="M4 7h6m4 0h6M4 17h10m4 0h2"/><circle cx="12" cy="7" r="2"/><circle cx="16" cy="17" r="2"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M4 9a12 12 0 0 1 16 0M7 12a8 8 0 0 1 10 0m-7 3a3 3 0 0 1 4 0"/><circle cx="12" cy="19" r="1"/></symbol>
+  </svg>
+  <a class="skip-link" href="#main">Lewati ke konten</a>
+  <header class="site-header">
+    <div class="shell header-inner flex items-center justify-between gap-3">
+      <a href="index.html" class="brand" aria-label="ThermoGuard-CPS, monitoring">
+        <span class="brand-mark"><svg class="icon"><use href="#i-temp"/></svg></span>
+        <span>ThermoGuard<span class="brand-suffix">-CPS</span></span>
+      </a>
+      <div class="flex items-center gap-2 sm:gap-4">
+        <span id="connectionBadge" class="badge connection" role="status"><i class="dot"></i><span id="connectionText">MQTT Offline</span></span>
+        <a class="icon-button active:scale-[0.98]" href="settings.html" aria-label="Buka pengaturan" title="Pengaturan">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 3-.5 3-2 .9L4 6l-2 3 2.3 2v2L2 15l2 3 2.5-.9 2 .9.5 3h6l.5-3 2-.9L20 18l2-3-2.3-2v-2L22 9l-2-3-2.5.9-2-.9-.5-3Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+  <main id="main" class="shell max-w-7xl mx-auto space-y-6">
+    <div class="page-heading flex flex-wrap items-end justify-between gap-3">
+      <div><p class="eyebrow">RUANG SERVER / ESP32</p><h1>Monitoring proteksi</h1></div>
+      <p class="muted text-sm">Pembaruan <time id="lastUpdate">—</time></p>
+    </div>
+    <div class="grid gap-5 lg:grid-cols-12 xl:gap-6">
+      <section id="statusCard" class="card status-card lg:col-span-8" data-mode="NORMAL" aria-labelledby="statusHeading">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <p id="statusHeading" class="section-label">Status ruang</p>
+          <span id="sourceBadge" class="badge">Simulasi</span>
+        </div>
+        <div class="status-main"><span class="status-icon"><svg class="icon"><use href="#i-shield"/></svg></span><div><h2 id="modeName">NORMAL</h2><p id="modeDescription">Menyiapkan data simulasi…</p></div></div>
+        <div class="status-foot"><span class="status-line"><i class="dot"></i><span id="statusSummary">Ventilasi tertutup · buzzer nonaktif</span></span><span id="statusOrigin" class="muted">Data contoh</span></div>
+      </section>
+      <aside class="card connection-card lg:col-span-4" aria-labelledby="networkTitle">
+        <div class="flex items-center justify-between gap-2"><h2 id="networkTitle" class="section-label">Koneksi & penyimpanan</h2><svg class="icon muted" aria-hidden="true"><use href="#i-link"/></svg></div>
+        <p id="networkDetail" class="connection-detail">Broker belum diatur</p>
+        <div class="buffer-row"><span class="text-sm">RAM Offline Buffer</span><strong id="bufferCount" class="buffer-count tabular-nums">0</strong></div>
+        <p id="bufferDetail" class="muted text-sm">Buffer simulasi di tab ini.</p>
+        <p class="local-note">Aktuator tetap bekerja 100% lokal saat offline melalui firmware ESP32.</p>
+      </aside>
+    </div>
+    <section class="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-2 lg:grid-cols-4" aria-label="Metrik sensor">
+      <article class="card metric"><div class="metric-label"><span>Suhu ruang</span><svg class="icon" aria-hidden="true"><use href="#i-temp"/></svg></div><p class="metric-reading"><strong id="temperature">—</strong><span>°C</span></p><p id="temperatureHint" class="metric-note">Sensor DHT22</p></article>
+      <article class="card metric"><div class="metric-label"><span>Kelembapan</span><svg class="icon" aria-hidden="true"><use href="#i-drop"/></svg></div><p class="metric-reading"><strong id="humidity">—</strong><span>%</span></p><p class="metric-note">Sensor DHT22</p></article>
+      <article class="card metric"><div class="metric-label"><span>Level asap</span><svg class="icon" aria-hidden="true"><use href="#i-smoke"/></svg></div><p class="metric-reading"><strong id="smoke">—</strong><span>ppm</span></p><p id="smokeHint" class="metric-note">Sensor MQ-2</p></article>
+      <article class="card metric"><div class="metric-label"><span>Batas suhu</span><svg class="icon" aria-hidden="true"><use href="#i-tune"/></svg></div><p class="metric-reading"><strong id="setpoint">—</strong><span>°C</span></p><p id="setpointHint" class="metric-note">Potensiometer</p></article>
+    </section>
+    <div class="grid gap-5 lg:grid-cols-12 xl:gap-6">
+      <section class="card chart-card lg:col-span-8" aria-labelledby="historyTitle">
+        <div class="flex flex-wrap items-start justify-between gap-3"><div><h2 id="historyTitle">Riwayat sensor</h2><p id="historySource" class="muted text-sm">120 sampel terakhir · simulasi</p></div><span class="legend"><i class="legend-dash"></i>Batas aktif</span></div>
+        <figure class="chart-figure"><figcaption><span>Suhu <span class="muted">/ °C</span></span><strong id="chartTempValue" class="tabular-nums">—</strong></figcaption><div class="canvas-wrap"><canvas id="temperatureChart" role="img" aria-label="Riwayat suhu dan garis setpoint">Riwayat suhu. Nilai terkini tersedia pada kartu metrik.</canvas></div></figure>
+        <figure class="chart-figure"><figcaption><span>Asap <span class="muted">/ ppm</span></span><strong id="chartSmokeValue" class="tabular-nums">—</strong></figcaption><div class="canvas-wrap"><canvas id="smokeChart" role="img" aria-label="Riwayat asap dan garis ambang">Riwayat asap. Nilai terkini tersedia pada kartu metrik.</canvas></div></figure>
+      </section>
+      <section class="card actuator-card lg:col-span-4" aria-labelledby="actuatorTitle">
+        <div><h2 id="actuatorTitle">Aktuator</h2><p id="actuatorSource" class="muted text-sm">Respons simulasi</p></div>
+        <div class="servo-panel">
+          <div class="flex items-center justify-between gap-3"><span class="text-sm">Servo ventilasi</span><strong id="servoAngle" class="tabular-nums">0°</strong></div>
+          <svg class="servo-svg" viewBox="0 0 200 120" role="img" aria-label="Sudut servo ventilasi" id="servoGraphic">
+            <path d="M35 94 A65 65 0 0 1 100 29" class="servo-track"/>
+            <path d="M35 94h8M54 48l6 6M100 29v8" class="servo-ticks"/>
+            <g id="servoNeedle" class="servo-needle"><path d="M100 94H43"/><circle cx="100" cy="94" r="5"/></g>
+            <text x="22" y="115">0°</text><text x="27" y="40">45°</text><text x="89" y="18">90°</text>
+            <text x="124" y="78" id="servoLarge">0°</text>
+          </svg>
+          <p id="servoDescription" class="muted text-sm">Ventilasi tertutup</p>
+        </div>
+        <div class="actuator-row"><span class="flex items-center gap-2"><svg class="icon muted" aria-hidden="true"><use href="#i-bell"/></svg>Buzzer</span><span id="buzzerStatus" class="badge">Nonaktif</span></div>
+        <div class="led-section"><p class="text-sm">Indikator LED</p><div class="led-grid">
+          <div id="ledGreen" class="led-item" data-led="green"><i class="led-lamp"></i><span>Hijau</span><small>Normal</small></div>
+          <div id="ledYellow" class="led-item" data-led="yellow"><i class="led-lamp"></i><span>Kuning</span><small>Waspada</small></div>
+          <div id="ledRed" class="led-item" data-led="red"><i class="led-lamp"></i><span>Merah</span><small>Darurat</small></div>
+        </div></div>
+        <div class="telegram-row"><span class="text-sm">Telegram</span><span id="telegramStatus" class="muted text-sm" role="status">Simulasi siap</span></div>
+      </section>
+    </div>
+    <section class="simulation-panel" aria-labelledby="simulationTitle">
+      <div><h2 id="simulationTitle">Uji skenario</h2><p id="simulationNote" class="muted text-sm">Data contoh aktif. Kondisi perangkat belum diketahui.</p></div>
+      <div class="scenario-buttons" role="group" aria-label="Skenario simulasi">
+        <button class="button active:scale-[0.98]" data-scenario="NORMAL" aria-pressed="true">Normal</button>
+        <button class="button active:scale-[0.98]" data-scenario="WARNING" aria-pressed="false">Warning</button>
+        <button class="button active:scale-[0.98]" data-scenario="CRITICAL" aria-pressed="false">Critical</button>
+      </div>
+    </section>
+    <section class="card log-card" aria-labelledby="logTitle"><div class="flex items-center justify-between gap-3"><h2 id="logTitle">Log event terbaru</h2><span class="muted text-sm">20 event terakhir</span></div><ol id="eventLog" class="event-list" aria-label="Log event"></ol></section>
+    <footer class="footer"><span>ThermoGuard-CPS</span><span id="footerSource">Monitoring lokal & telemetri MQTT</span></footer>
+  </main>
+  <noscript><p class="noscript">Aktifkan JavaScript untuk menjalankan dashboard.</p></noscript>
+</body>
+</html>
