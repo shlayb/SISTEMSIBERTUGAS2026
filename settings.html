@@ -35,9 +35,14 @@
           </section>
           <section class="card form-card"><div class="form-heading"><span class="section-number">03</span><div><h2>Notifikasi Telegram</h2><p class="muted text-sm">Pesan darurat saat memasuki CRITICAL.</p></div></div>
             <label class="check-field"><input id="telegramEnabled" name="telegramEnabled" type="checkbox"><span>Aktifkan notifikasi dari dashboard</span></label>
-            <div class="field"><label for="telegramToken">Bot Token</label><input id="telegramToken" name="telegramToken" type="password" autocomplete="new-password" placeholder="123456789:…"><p class="field-help">Token tersimpan di localStorage, terlihat oleh skrip di halaman ini.</p></div>
-            <div class="field"><label for="telegramChatId">Chat ID</label><input id="telegramChatId" name="telegramChatId" type="text" placeholder="-1001234567890" spellcheck="false"></div>
-            <p class="form-note">Buka chat bot dan kirim /start terlebih dahulu. Simulasi tidak mengirim pesan. Notifikasi browser memerlukan halaman terbuka dan internet; untuk operasi mandiri, kirim dari ESP32 atau backend.</p>
+            <div class="field"><label for="telegramToken">Bot Token</label><input id="telegramToken" name="telegramToken" type="password" autocomplete="new-password" placeholder="123456789:…" spellcheck="false" autocapitalize="none"><p class="field-help">Saat pengaturan disimpan, token masuk ke localStorage dan sinkronisasi cloud jika tersedia; dapat dibaca oleh skrip halaman. Tombol uji tidak menyimpan token.</p></div>
+            <div class="field"><label for="telegramChatId">Chat ID</label><input id="telegramChatId" name="telegramChatId" type="text" placeholder="-1001234567890" spellcheck="false" autocapitalize="none"><p class="field-help">ID numerik chat pribadi/grup (dapat negatif), atau @username grup/channel publik.</p></div>
+            <div class="field">
+              <button id="testTelegram" type="button" class="button active:scale-[0.98]" aria-describedby="telegramTestHelp" aria-busy="false">Kirim pesan uji</button>
+              <p id="telegramTestHelp" class="field-help">Mengirim satu pesan manual memakai isian di atas, tanpa menyimpan pengaturan. Tidak perlu ESP32, MQTT, atau mengaktifkan notifikasi otomatis.</p>
+              <p id="telegramTestStatus" class="field-help" role="status" aria-live="polite" aria-atomic="true" data-state="idle">Siap mengirim pesan uji. Memerlukan internet.</p>
+            </div>
+            <p class="form-note">Buka chat bot dan kirim /start terlebih dahulu. Skenario Normal/Warning/Critical tidak otomatis mengirim Telegram. Notifikasi browser memerlukan halaman terbuka dan internet; untuk operasi mandiri, kirim dari ESP32 atau backend.</p>
           </section>
         </div>
       </div>

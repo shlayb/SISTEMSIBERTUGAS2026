@@ -120,11 +120,35 @@ Simulasi otomatis aktif jika MQTT terputus, broker belum diatur, atau telemetri 
 
 ## Telegram
 
+### Kirim pesan uji secara manual
+
+1. Buat bot melalui BotFather, salin token, lalu buka percakapan bot dan kirim `/start`. Untuk grup/channel, tambahkan bot dan berikan izin mengirim pesan.
+2. Buka **Pengaturan → Notifikasi Telegram**, lalu isi **Bot Token** dan **Chat ID**. Chat ID dapat berupa angka positif untuk chat pribadi, angka negatif untuk grup, atau `@username` grup/channel publik. Token dan Chat ID divalidasi sebelum ada permintaan ke Telegram.
+3. Klik **Kirim pesan uji**. Tombol memakai isian form saat itu, termasuk perubahan yang belum disimpan. Tidak perlu ESP32, koneksi MQTT, **Simpan pengaturan**, atau mencentang **Aktifkan notifikasi dari dashboard**. Isian MQTT/proteksi tidak perlu valid untuk uji ini.
+4. Browser mengirim tepat satu `fetch` **POST** ke Telegram Bot API `sendMessage`. Pesan diawali **[UJI] ThermoGuard-CPS**, menjelaskan bahwa ini pengujian manual dan bukan peringatan sensor, serta menyertakan waktu pengiriman menurut jam dan zona waktu browser.
+5. Selama pengiriman, tombol dinonaktifkan dan status **Mengirim** ditampilkan. **Berhasil** hanya muncul setelah HTTP berhasil, respons `ok: true`, dan `message_id` berupa bilangan bulat positif yang valid. Tombol aktif kembali setelah selesai atau gagal.
+
+Batas waktu permintaan, termasuk pembacaan respons, adalah **10 detik**. Uji manual **tidak melakukan retry otomatis**, tidak menyimpan kredensial ke localStorage/cloud, dan tidak mengubah pengaturan notifikasi otomatis. Kredensial dikirim langsung ke Telegram untuk permintaan ini. Tombol **Simpan pengaturan** tetap menjalankan penyimpanan dan sinkronisasi cloud yang sudah ada jika tersedia.
+
+| Kesalahan | Tindakan |
+|---|---|
+| Bot Token kosong, format salah, atau ditolak (401/404) | Salin token lengkap dan terbaru dari BotFather. |
+| Chat ID kosong, format salah, atau chat tidak ditemukan (400) | Periksa ID tujuan atau `@username`, gunakan ID grup terbaru, dan kirim `/start` ke bot. |
+| Akses ditolak (403 atau izin mengirim tidak tersedia) | Buka blokir bot, tambahkan ke grup/channel, dan periksa izin mengirim. |
+| Terlalu banyak permintaan (429) | Tunggu sesuai durasi dari Telegram jika ditampilkan, lalu coba secara manual. |
+| Gangguan jaringan/CORS | Periksa koneksi atau pembatasan browser/jaringan. Periksa chat sebelum mencoba lagi. |
+| Timeout 10 detik atau respons tidak valid | Pengiriman belum terkonfirmasi; pesan mungkin sudah diterima. Periksa chat sebelum mencoba lagi agar tidak mengirim pesan ganda. |
+| Gangguan layanan Telegram (5xx) | Coba kembali nanti secara manual. |
+
+Tombol skenario **Normal/Warning/Critical** tetap hanya mengubah simulasi dan **tidak otomatis mengirim Telegram**, termasuk ketika notifikasi otomatis aktif. Uji manual dijalankan hanya melalui tombol **Kirim pesan uji**.
+
+### Notifikasi otomatis dari telemetri perangkat
+
 1. Buat bot melalui BotFather, salin token, dan buka percakapan bot dengan `/start`.
-2. Isi Bot Token dan Chat ID di Pengaturan, lalu centang **Aktifkan notifikasi dari dashboard**.
+2. Isi Bot Token dan Chat ID di Pengaturan, centang **Aktifkan notifikasi dari dashboard**, lalu klik **Simpan pengaturan**.
 3. Dashboard memanggil HTTPS `sendMessage` ketika telemetri **segar** memasuki CRITICAL. Simulasi, replay, dan paket retained tidak mengirim pesan.
 4. “Terkirim” hanya muncul setelah respons Telegram `ok: true` dengan `message_id`, atau ketika ESP32 secara eksplisit melaporkan `telegramSent: true`.
-5. Pengiriman gagal dicoba ulang paling cepat 30 detik, dengan batas umur antrean 5 menit. Hanya insiden terbaru yang ditahan dalam RAM. Pesan antarinsiden dibatasi 60 detik; deduplikasi memakai `alertId` (fallback `id`) dan catatan pengiriman di localStorage. Web Locks mengurangi pengiriman ganda antartab jika tersedia; untuk jaminan lintasbrowser/perangkat, gunakan pengirim tunggal ESP32/backend.
+5. Khusus notifikasi otomatis, pengiriman gagal dicoba ulang paling cepat 30 detik, dengan batas umur antrean 5 menit. Hanya insiden terbaru yang ditahan dalam RAM. Pesan antarinsiden dibatasi 60 detik; deduplikasi memakai `alertId` (fallback `id`) dan catatan pengiriman di localStorage. Web Locks mengurangi pengiriman ganda antartab jika tersedia; untuk jaminan lintasbrowser/perangkat, gunakan pengirim tunggal ESP32/backend.
 6. Token yang disimpan di localStorage tidak tersembunyi dari pengguna atau skrip halaman. Implementasi statis ini cocok untuk demo/lingkungan terkendali. Notifikasi mandiri saat tab tertutup harus ditangani ESP32 atau backend; jangan aktifkan dua pengirim untuk insiden yang sama. Jika kebijakan CORS/jaringan menghalangi Telegram, UI menunjukkan gagal, bukan terkirim.
 
 ## Desain dan pemeriksaan
@@ -134,6 +158,7 @@ Simulasi otomatis aktif jika MQTT terputus, broker belum diatur, atau telemetri 
 - Target sentuh minimal 44×44 CSS px, font input 16px, safe-area notch, fokus keyboard, reduced-motion, hover hanya untuk perangkat yang mendukungnya.
 - Palet putih/netral dengan aksen `#22C55E` dan `#FF8A1F`; tanpa ikon emoji, library chart, atau framework JavaScript.
 - Uji alur: Normal → Warning → Critical; Simpan/Reset; broker offline/online; telemetri kedaluwarsa; replay tidak memicu pesan; resize dashboard dan pengaturan.
+- Uji Telegram manual: matikan notifikasi otomatis dan kosongkan broker, ubah token/Chat ID tanpa menyimpan, lalu klik **Kirim pesan uji**. Periksa label/waktu pesan, cegah klik ganda saat mengirim, uji input tidak valid serta jaringan offline/timeout, dan pastikan pengaturan tersimpan tidak berubah. Verifikasi respons gagal dengan mock API tanpa mengirim pesan sungguhan atau membanjiri Telegram untuk memicu 429.
 
 Referensi: [MQTT.js](https://github.com/mqttjs/MQTT.js), [Tailwind Play CDN](https://tailwindcss.com/docs/installation/play-cdn), [Telegram Bot API](https://core.telegram.org/bots/api#sendmessage), [konfigurasi Vercel](https://vercel.com/docs/project-configuration). Tailwind Play CDN ditujukan untuk pengembangan/demonstrasi; CDN dipertahankan sesuai spesifikasi tanpa build step.
 #   S I S T E M S I B E R T U G A S 2 0 2 6  
